@@ -44,20 +44,20 @@
 
 {% block panel %}
 
-<h2>Metrics</h2>
-
-<h3>Executed Commands</h3>
+<h2>Executed Commands</h2>
 
 {% if collector.runs is empty %}
 	<div class="empty">
 		<p>No runs recorded.</p>
 	</div>
 {% endif %}
+
+{% for batchNumber, runs in collector.getRunsGroupedByBatchNumber() %}
+    <h3>Batch {{ batchNumber }}</h3>
+    <div>Runner: {{ runs[0].runnerName }} ({{ runs|length }} threads)</div>
 	<table style="display: table;">
 		<thead>
 			<tr>
-				<th>Batch Number</th>
-				<th>Runner</th>
 				<th>Class</th>
 				<th>Method</th>
 				<th>Duration</th>
@@ -67,12 +67,6 @@
 		<tbody>
 			{% for entry in collector.runs %}
 				<tr class="" style="display: table-row;">
-					<td class="font-normal">
-						{{ entry.batchNumber }}
-					</td>
-					<td class="font-normal">
-						<span title="{{ entry.runner }}">{{ entry.runnerName }}</span>
-					</td>
 					<td class="font-normal">
 						<span title="{{ entry.class }}">{{ entry.className }}</span>
 					</td>
@@ -86,7 +80,9 @@
                         <pre>{{ dump(entry.response)}}</pre>
                     </td>
 				</tr>
-			</td>
+            {% endfor %}
 		</tbody>
-	</tr>
-</div>{% endfor %}</tbody></table>{% endblock %}
+	</table>
+{% endfor %}
+
+{% endblock %}

@@ -45,6 +45,16 @@ class PhpMultithreadDataCollector extends DataCollector implements DataCollector
         return $this->data['runs'] ?? [];
     }
 
+    public function getRunsGroupedByBatchNumber(): array
+    {
+        $batches = [];
+        foreach ($this->getRuns() as $run) {
+            $batches[$run->getBatchNumber()][] = $run;
+        }
+
+        return $batches;
+    }
+
     public function isActive(): bool
     {
         return !empty($this->getRuns());
