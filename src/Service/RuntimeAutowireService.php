@@ -2,6 +2,7 @@
 
 namespace Tbessenreither\PhpMultithread\Service;
 
+use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use RuntimeException;
@@ -13,6 +14,7 @@ final class RuntimeAutowireService
 
     public function __construct(
         private KernelInterface $kernel,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -31,6 +33,13 @@ final class RuntimeAutowireService
             $type = $param->getType();
 
             if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+
+
+                if ($type->getName() === "Psr\Log\LoggerInterface") {
+                    $args[] = $this->logger;
+                    continue;
+                }
+
                 $dependencyClass = $type->getName();
 
                 if (!$this->kernel->getContainer()->has($dependencyClass)) {

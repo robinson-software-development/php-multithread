@@ -44,6 +44,32 @@
 
 {% block panel %}
 
+{% if collector.hasIssues() %}
+
+    <h2>Issues</h2>
+
+    <table style="display: table;">
+        <thead>
+            <tr>
+                <th>Message</th>
+                <th>Context</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in collector.issues %}
+                <tr class="" style="display: table-row;">
+                    <td class="font-normal">
+                        {{ entry.message }}
+                    </td>
+                    <td class="font-normal">
+                        <pre>{{ dump(entry.context)}}</pre>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
 <h2>Executed Commands</h2>
 
 {% if collector.runs is empty %}
@@ -65,7 +91,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{% for entry in collector.runs %}
+			{% for entry in runs %}
 				<tr class="" style="display: table-row;">
 					<td class="font-normal">
 						<span title="{{ entry.class }}">{{ entry.className }}</span>

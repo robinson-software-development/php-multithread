@@ -64,6 +64,11 @@ class ThreadDto
         $this->response = $response;
     }
 
+    public function hasResponse(): bool
+    {
+        return $this->response !== null;
+    }
+
     public function getResponse(): ?ResponseDto
     {
         return $this->response;

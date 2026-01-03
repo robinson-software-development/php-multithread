@@ -21,6 +21,7 @@ class PhpMultithreadDataCollector extends DataCollector implements DataCollector
         private readonly string $appEnv,
     ) {
         $this->data['runs'] = [];
+        $this->data['issues'] = [];
     }
 
     public function getName(): string
@@ -49,6 +50,9 @@ class PhpMultithreadDataCollector extends DataCollector implements DataCollector
     {
         $batches = [];
         foreach ($this->getRuns() as $run) {
+            if (!isset($batches[$run->getBatchNumber()])) {
+                $batches[$run->getBatchNumber()] = [];
+            }
             $batches[$run->getBatchNumber()][] = $run;
         }
 
@@ -67,6 +71,28 @@ class PhpMultithreadDataCollector extends DataCollector implements DataCollector
     public function isCollecting(): bool
     {
         return $this->appEnv === 'dev';
+    }
+
+    public function hasIssues(): bool
+    {
+        return !empty($this->data['issues']);
+    }
+
+    public function raiseIssue(string $message, array $context = []): void
+    {
+        if (!$this->isCollecting()) {
+            return;
+        }
+
+        $this->data['issues'][] = [
+            'message' => $message,
+            'context' => $context,
+        ];
+    }
+
+    public function getIssues(): array
+    {
+        return $this->data['issues'] ?? [];
     }
 
 }

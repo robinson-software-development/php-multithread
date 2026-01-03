@@ -35,6 +35,8 @@ class MultithreadService
     {
         $this->batchNumber++;
 
+        $this->checkThreadDtos($threadDtos);
+
         $runner = $this->getRunner();
 
         $this->prepareThreadDtos(
@@ -66,6 +68,25 @@ class MultithreadService
             $threadDto->setRunner($runner);
             $threadDto->setBatchNumber($this->batchNumber);
             $this->phpMultithreadDataCollector->addRun($threadDto);
+        }
+    }
+
+    private function checkThreadDtos(array &$threadDtos): void
+    {
+        foreach ($threadDtos as $key => $threadDto) {
+            if ($threadDto->hasResponse()) {
+                $this->phpMultithreadDataCollector->raiseIssue(
+                    message: 'Thread already ran and was removed.',
+                    context: [
+                        'batch' => $this->batchNumber,
+                        'uuid' => $threadDto->getUuid(),
+                        'class' => $threadDto->getClass(),
+                        'method' => $threadDto->getMethod(),
+                        'parameters' => $threadDto->getParameters(),
+                    ],
+                );
+                unset($threadDtos[$key]);
+            }
         }
     }
 
