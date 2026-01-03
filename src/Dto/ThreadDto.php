@@ -4,7 +4,6 @@ namespace Tbessenreither\PhpMultithread\Dto;
 
 use InvalidArgumentException;
 use Symfony\Component\Uid\UuidV7;
-use Tbessenreither\PhpMultithread\DataCollector\ThreadStatistics;
 use Tbessenreither\PhpMultithread\Trait\SerializeFunctionsTrait;
 
 
