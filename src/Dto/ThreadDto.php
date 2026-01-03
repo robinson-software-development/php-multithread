@@ -4,6 +4,7 @@ namespace Tbessenreither\PhpMultithread\Dto;
 
 use InvalidArgumentException;
 use Symfony\Component\Uid\UuidV7;
+use Tbessenreither\PhpMultithread\DataCollector\ThreadStatistics;
 use Tbessenreither\PhpMultithread\Trait\SerializeFunctionsTrait;
 
 
@@ -14,6 +15,7 @@ class ThreadDto
     private string $uuid;
     private ?ResponseDto $response = null;
     private ?string $runner = null;
+    private ?int $batchNumber = null;
 
     public function __construct(
         private string $class,
@@ -38,6 +40,13 @@ class ThreadDto
     public function getClass(): string
     {
         return $this->class;
+    }
+
+    public function getClassName(): string
+    {
+        $parts = explode('\\', $this->class);
+
+        return end($parts);
     }
 
     public function getMethod(): string
@@ -72,6 +81,27 @@ class ThreadDto
     public function getRunner(): string
     {
         return $this->runner ?? 'n/a';
+    }
+
+    public function getRunnerName(): string
+    {
+        if ($this->runner === null) {
+            return 'n/a';
+        }
+
+        $parts = explode('\\', $this->runner);
+
+        return end($parts);
+    }
+
+    public function setBatchNumber(int $batchNumber): void
+    {
+        $this->batchNumber = $batchNumber;
+    }
+
+    public function getBatchNumber(): int
+    {
+        return $this->batchNumber ?? 0;
     }
 
 }

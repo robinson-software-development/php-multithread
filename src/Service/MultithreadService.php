@@ -3,8 +3,8 @@
 namespace Tbessenreither\PhpMultithread\Service;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Stopwatch\Stopwatch;
 use Tbessenreither\PhpMultithread\DataCollector\PhpMultithreadDataCollector;
-use Tbessenreither\PhpMultithread\DataCollector\ThreadStatistics;
 use Tbessenreither\PhpMultithread\Dto\ResponseDto;
 use Tbessenreither\PhpMultithread\Dto\ThreadDto;
 use Tbessenreither\PhpMultithread\Interface\ThreadRunnerInterface;
@@ -15,12 +15,15 @@ use Tbessenreither\PhpMultithread\Service\Runners\PcntlRunner;
 class MultithreadService
 {
 
+    private int $batchNumber = 0;
+
     public function __construct(
         #[Autowire(service: PcntlRunner::class)]
-        private ThreadRunnerInterface $primaryRunner,
+        private ThreadRunnerInterface $pcntlRunner,
         #[Autowire(service: CommandRunner::class)]
-        private ThreadRunnerInterface $secondaryRunner,
+        private ThreadRunnerInterface $commandRunner,
         private PhpMultithreadDataCollector $phpMultithreadDataCollector,
+        private Stopwatch $stopwatch,
     ) {
     }
 
@@ -30,42 +33,40 @@ class MultithreadService
      */
     public function runThreads(array $threadDtos): array
     {
+        $this->batchNumber++;
+
         $runner = $this->getRunner();
+
         $this->prepareThreadDtos(
-            runner: CommandRunner::class,
+            runner: $runner::class,
             threadDtos: $threadDtos,
         );
 
-        switch ($runner) {
-            case PcntlRunner::class:
+        $this->stopwatch->start("Run Threads", "php-multithread");
+        $runnerResponses = $runner->run(
+            threadDtos: $threadDtos,
+        );
+        $this->stopwatch->stop("Run Threads");
 
-                return $this->primaryRunner->run(
-                    threadDtos: $threadDtos,
-                );
-            case CommandRunner::class:
-            default:
+        return $runnerResponses;
+    }
 
-                return $this->secondaryRunner->run(
-                    threadDtos: $threadDtos,
-                );
+    private function getRunner(): ThreadRunnerInterface
+    {
+        if (function_exists('pcntl_fork')) {
+            return $this->pcntlRunner;
         }
+
+        return $this->commandRunner;
     }
 
     private function prepareThreadDtos(string $runner, array $threadDtos): void
     {
         foreach ($threadDtos as $threadDto) {
             $threadDto->setRunner($runner);
+            $threadDto->setBatchNumber($this->batchNumber);
             $this->phpMultithreadDataCollector->addRun($threadDto);
         }
-    }
-
-    private function getRunner(): string
-    {
-        if (function_exists('pcntl_fork')) {
-            return PcntlRunner::class;
-        }
-
-        return CommandRunner::class;
     }
 
 }
