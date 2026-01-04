@@ -2,10 +2,10 @@
 
 namespace Tbessenreither\PhpMultithread\Service\Runners;
 
-use RuntimeException;
-use Tbessenreither\PhpMultithread\DataCollector\PhpMultithreadDataCollector;
 use Tbessenreither\PhpMultithread\Dto\ResponseDto;
 use Tbessenreither\PhpMultithread\Dto\ThreadDto;
+use Tbessenreither\PhpMultithread\Exception\ResponseException;
+use Tbessenreither\PhpMultithread\Exception\TimeoutException;
 use Tbessenreither\PhpMultithread\Interface\ThreadRunnerInterface;
 use Tbessenreither\PhpMultithread\Service\RuntimeAutowireService;
 use Throwable;
@@ -14,9 +14,12 @@ use Throwable;
 class PcntlRunner implements ThreadRunnerInterface
 {
 
+    private int $socketDomain;
+
     public function __construct(
         private RuntimeAutowireService $runtimeAutowireService,
     ) {
+        $this->socketDomain = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? STREAM_PF_INET : STREAM_PF_UNIX);
     }
 
     /**
@@ -59,8 +62,7 @@ class PcntlRunner implements ThreadRunnerInterface
         foreach ($threadDtos as $threadDto) {
             $threadsDtoByUuid[$threadDto->getUuid()] = $threadDto;
 
-            $domain = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? STREAM_PF_INET : STREAM_PF_UNIX);
-            $socketsPair = stream_socket_pair($domain, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+            $socketsPair = stream_socket_pair($this->socketDomain, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
             if (!$socketsPair) {
                 continue;
             }
@@ -149,7 +151,7 @@ class PcntlRunner implements ThreadRunnerInterface
             return ResponseDto::fromSerialized($content);
         }
 
-        throw new RuntimeException("No data received from socket.");
+        throw new ResponseException("No data received from socket.");
     }
 
     private function waitForThreadWithTimeout(string $uuid, int $pid, int $timeout, int $startingTime, array &$resourceUsage): void
@@ -169,7 +171,7 @@ class PcntlRunner implements ThreadRunnerInterface
                     pcntl_waitpid($pid, $status, 0, $resourceUsage);
                 }
 
-                throw new RuntimeException("Thread {$uuid} timed out and terminated after {$timeout} seconds.");
+                throw new TimeoutException("Thread {$uuid} timed out and terminated after {$timeout} seconds.");
             }
             usleep(100000); // 100ms poll interval
         }
@@ -198,10 +200,8 @@ class PcntlRunner implements ThreadRunnerInterface
 
     private function fixPcntlRandIssues(): void
     {
-        for ($i = 0; $i < random_int(0, 1024); $i++) {
-            usleep(random_int(0, 10));
-            rand(random_int(0, 512), random_int(513, 1024));
-        }
+        usleep(random_int(0, 5000));
+        mt_srand();
     }
 
 }

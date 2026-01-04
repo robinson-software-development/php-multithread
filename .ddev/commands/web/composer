@@ -1,7 +1,0 @@
-#!/bin/bash
-
-## Description: Run Composer commands
-## Usage: composer [composer-arguments]
-## Example: "ddev composer install" or "ddev composer update"
-
-composer "$@"

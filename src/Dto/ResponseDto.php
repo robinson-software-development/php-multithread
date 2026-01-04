@@ -3,6 +3,7 @@
 namespace Tbessenreither\PhpMultithread\Dto;
 
 use Exception;
+use Tbessenreither\PhpMultithread\Exception\TypeMissmatchException;
 use Tbessenreither\PhpMultithread\Trait\SerializeFunctionsTrait;
 
 
@@ -49,7 +50,7 @@ class ResponseDto
     public function getResult(string $expectedResponseType = 'mixed'): mixed
     {
         if ($expectedResponseType !== 'mixed' && !($this->result instanceof $expectedResponseType)) {
-            throw new Exception("The response type does not match the expected type. Expected: " . $expectedResponseType . ", got: " . get_debug_type($this->result) . "");
+            throw new TypeMissmatchException("The response type does not match the expected type. Expected: " . $expectedResponseType . ", got: " . get_debug_type($this->result) . "");
         }
 
         return $this->result;
